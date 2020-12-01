@@ -1,9 +1,9 @@
+<pre>
+
 /* float24, Copyright (c) 2020 Yuriy Yakimenko */ 
 
 ####  Floating point number using 24 bits.
 =========================================
-
-<pre> 
 
 I needed  to store a floating point value  with maximum possible  precision, but
 had  only  three bytes (as opposed to regular four) for it in memory. I am aware
@@ -23,12 +23,8 @@ when   exponent   bits    contain    zero,   we    store   denormalized   number
 I   also  made   this  implementation  compatible   with  both  big-endian   and
 little-endian machines. 
 
-</pre> 
-
 #### Known issues: 
 ================= 
-
-<pre> 
 
 In case  you would  like to modify  this code to store  a signed 24-bit floating
 point value, you will need to add a sign bit and correspondingly remove this bit
