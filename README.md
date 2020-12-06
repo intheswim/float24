@@ -23,12 +23,19 @@ when   exponent   bits    contain    zero,   we    store   denormalized   number
 I   also  made   this  implementation  compatible   with  both  big-endian   and
 little-endian machines. 
 
+#### Update to support signed 24-bit floats:
+===========================================
+
+To represent  signed 24-bit  number,  use float24_s structure. It  uses the same
+number of  bits  for exponent but one  bit for sign, and correspondingly 18, not
+19 bits for mantissa. 
+
 #### Known issues: 
 ================= 
 
-In case  you would  like to modify  this code to store  a signed 24-bit floating
-point value, you will need to add a sign bit and correspondingly remove this bit
-from either mantissa or exponsent (depending on your required range/accuracy). 
+In case  you  would  like  to modify this code to store  a  different range, you 
+will need  to change the number of exponent bits accordingly using FP24_EXP_BITS 
+or FP24S_EXP_BITS. Everything else is done automatically. 
 
 </pre> 
 

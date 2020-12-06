@@ -15,7 +15,7 @@
 #include <math.h>   // ldexp
 #include <string.h> // memset
 
-// FP24 impl. unsigned 24-bit float. Range: 0 to 65535 (when  FP24_EXP_BITS set to 5).
+// FP24 impl. unsigned 24-bit float. Range: 0 to 65535 (when FP24_EXP_BITS set to 5).
 // Epsilon value with MANTISSA bits equal 19 is 0.000002 (2^-19).
 
 #define FP24_EXP_BITS  5
@@ -156,6 +156,136 @@ static float get24bit (const float24_cast value)
   temp.raw.sign = 0;
   temp.raw.exponent = value.raw.exponent - FP24_EXP_SHIFT + 127 - 1;
   temp.raw.mantissa = value.raw.mantissa << (23 - FP24_MANT_BITS);
+
+  if (isFloatBigEndian())
+  {
+    return ReverseFloat(temp.f);
+  }
+  return temp.f;
+}
+
+// FP24 impl. signed 24-bit float. Range from -65535 to 65535 (when FP24_EXP_BITS set to 5).
+// Epsilon value with MANTISSA bits equal 18 is 0.000004 (2^-18).
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#define FP24S_EXP_BITS  5
+#define FP24S_MANT_BITS (24 - FP24S_EXP_BITS - 1) // 18: 24 bits in 3 bytes minus exp. bits minus sign bit
+#define FP24S_EXP_SHIFT ((1 << (FP24S_EXP_BITS - 1)) - 1)  // 15
+#define FP24S_MAX_EXP   ((1 << FP24S_EXP_BITS) - 1)       // 31
+
+typedef union {
+  unsigned char buffer[4];
+  struct
+  {
+    unsigned int mantissa : FP24S_MANT_BITS;
+    unsigned int exponent : FP24S_EXP_BITS;
+    unsigned int sign : 1;
+    unsigned int unused : 8;
+  } raw;
+} float24s_cast; // supports negative and positive values
+
+static void set24sbit (float24s_cast & value, float input);
+static float get24sbit (const float24s_cast value);
+
+struct float24_s
+{
+  float24s_cast data;
+
+  float24_s ()
+  {
+    set (0);
+  }
+
+  float24_s (float input)
+  {
+    set (input);
+  }
+  void set(float input)
+  {
+    set24sbit(data, input);
+  }
+  float get() const
+  {
+    return get24sbit(data);
+  }
+
+  operator float() const
+  {
+    return get();
+  }
+};
+
+
+static void set24sbit (float24s_cast & value, float input)
+{
+  if (isFloatBigEndian())
+  {
+    input = ReverseFloat(input);
+  } 
+
+  if (input == 0)
+  {
+    memset(value.buffer, 0, 3);
+    return;
+  }
+
+  value.raw.sign = 0;
+  
+  if (input < 0)
+  {
+    value.raw.sign = 1;
+    input = -input;
+  }
+
+  IEEE_float temp;
+  temp.f = input;
+
+  int exp = (int)temp.raw.exponent - 127 + FP24S_EXP_SHIFT + 1;
+
+  if (exp <= 0) // number betwen 0 and 1/(2^15)
+  {
+    value.raw.unused = 0;
+
+    input = ldexp(input, FP24S_EXP_SHIFT + FP24S_MANT_BITS); // input* pow(2, 15 + 18); // result number between 0 and 2^18-1
+    value.raw.mantissa = (int)round(input);
+    value.raw.exponent = 0;
+
+    return;
+  }
+  else if (exp > FP24S_MAX_EXP)
+  {
+    value.raw.unused = 0;
+    //value.raw.exponent = 31;
+    //value.raw.mantissa = 0x7ffff;
+    int sign = value.raw.exponent;
+    memset(value.buffer, 0xFF, 3);
+    value.raw.exponent = sign;
+    return;
+  }
+
+  value.raw.exponent = exp;
+  value.raw.mantissa = temp.raw.mantissa >> (23 - FP24S_MANT_BITS);
+  value.raw.unused = 0;
+}
+
+static float get24sbit (const float24s_cast value)
+{
+  IEEE_float temp;
+  if (value.raw.exponent == 0 && value.raw.mantissa == 0) return 0;
+
+  if (value.raw.exponent == 0) // values between 0 and 1/(2^15)
+  {
+    double ret = ldexp(value.raw.mantissa, -(FP24S_EXP_SHIFT + FP24S_MANT_BITS)); // *pow(2, -34); // 34 = 15 + 19
+    if (value.raw.sign != 0)
+      ret = -ret;
+
+    return (float)ret;
+  }
+
+  temp.raw.sign = value.raw.sign;
+  temp.raw.exponent = value.raw.exponent - FP24S_EXP_SHIFT + 127 - 1;
+  temp.raw.mantissa = value.raw.mantissa << (23 - FP24S_MANT_BITS);
 
   if (isFloatBigEndian())
   {
