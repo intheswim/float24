@@ -3,9 +3,18 @@
 
 #include "float24.h"
 
-double diff (const double input)
+double diff_u (const double input)
 {
   float24_u var24 (input);
+
+  double d = input - var24;
+
+  return d;
+}
+
+double diff_s (const double input)
+{
+  float24_s var24 (input);
 
   double d = input - var24;
 
@@ -25,7 +34,7 @@ void showFP24unsigned()
 
     for (double f = M_PI; cnt < 30; f+=100)
     {
-      printf ("(%f)\t diff : %.12lf\n", f, diff (f));
+      printf ("(%f)\t diff : %.12lf\n", f, diff_u (f));
 
       float24_u value = f;
 
@@ -43,6 +52,9 @@ void showFP24unsigned()
 
       printf ("%d\t %f\n", i, float(var));
     }
+
+    printf ("largest : %.15f\n", float24_u::huge());
+    printf ("smallest : %.15f\n", float24_u::tiny());
 }
 
 
@@ -59,7 +71,7 @@ void showFP24signed ()
     {
       int sign = cnt & 1 ? 1 : -1;
 
-      printf ("(%.12f)\t diff : %.12lf\n", sign * f, diff (sign * f));
+      printf ("(%.12f)\t diff : %.12lf\n", sign * f, diff_s (sign * f));
 
       float24_s value = sign * f;
 
@@ -77,6 +89,9 @@ void showFP24signed ()
 
       printf ("%d\t %f\n", i, float(var));
     }
+
+    printf ("largest : %.15f\n", float24_s::huge());
+    printf ("smallest : %.15f\n", float24_s::tiny());
 }
 
 

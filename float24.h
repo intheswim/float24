@@ -76,6 +76,24 @@ struct float24_u
   {
     return get();
   }
+
+  static float huge() // largest possible value
+  {
+    float24_u largest;
+    memset (largest.data.buffer,0xFF, 3);
+
+    return largest.get();
+  }
+
+  static float tiny() // smallest possible value greater than zero
+  {
+    float24_u smallest;
+    memset (smallest.data.buffer,0, 3);
+
+    smallest.data.raw.mantissa = 1;
+
+    return smallest.get();
+  }
 };
 
 static bool isFloatBigEndian()
@@ -214,6 +232,27 @@ struct float24_s
   {
     return get();
   }
+
+  static float huge() // largest possible value
+  {
+    float24_s largest;
+    memset (largest.data.buffer, 0xFF, 3);
+    largest.data.raw.sign = 0;
+
+    return largest.get();
+  }
+
+  static float tiny() // smallest possible value greater than zero
+  {
+    float24_s smallest;
+    memset (smallest.data.buffer, 0, 3);
+
+    smallest.data.raw.sign = 0;
+    smallest.data.raw.mantissa = 1;
+
+    return smallest.get();
+  }
+
 };
 
 
